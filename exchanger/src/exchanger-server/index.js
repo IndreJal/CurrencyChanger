@@ -6,6 +6,7 @@ const app = express();
 
 const SELECT_CURRENCY_QUERY = 'SELECT CurrencyId, CurrencyCode FROM CurrencyExchange.Currency WHERE IsActive = 1';
 const SELECT_RATES_QUERY = 'SELECT CurrencyIdFrom, CurrencyIdTo, ExchangeRate FROM CurrencyExchange.ExchangeRates';
+const SELECT_LOGS_QUERY = 'SELECT * FROM CurrencyExchange.UsageLog';
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -23,7 +24,7 @@ connection.connect(err => {
 app.use(cors());
 
 app.get('/', (req, res) => {
-    res.send('go to /curenciejkjks to see currencies')
+    res.send('go to /curencies to see currencies')
 });
 
 app.get('/currencies', (req, res) => {
@@ -72,7 +73,37 @@ app.get('/exchangeRates/get', (req, res) => {
 });
 
 app.get('/exchangeRates', (req, res) => {
-    connection.query(SELECT_RATES_QUERY, (err, results) => {
+    connection.query(SELECT_LOGS_QUERY, (err, results) => {
+        if(err) {
+            return res.send(err);
+        }
+        else {
+            return res.json({
+                data: results
+            })
+        }
+    });
+});
+
+
+app.get('/logs', (req, res) => {
+    connection.query(SELECT_LOGS_QUERY, (err, results) => {
+        if(err) {
+            return res.send(err);
+        }
+        else {
+            return res.json({
+                data: results
+            })
+        }
+    });
+});
+
+app.get('/logs/log', (req, res) => {
+    const {AmountToConvert, AmountConverted, CurrencyIdFrom, CurrencyIdTo, ExchangeRate} = req.query;
+    const INSERT_LOG_QUERY = `INSERT INTO CurrencyExchange.UsageLog (AmountToConvert, AmountConverted, CurrencyIdFrom, CurrencyIdTo, ExchangeRate) VALUES (${AmountToConvert}, ${AmountConverted}, '${CurrencyIdFrom}', '${CurrencyIdTo}', ${ExchangeRate})`;
+
+    connection.query(INSERT_LOG_QUERY, (err, results) => {
         if(err) {
             return res.send(err);
         }

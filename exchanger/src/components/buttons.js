@@ -1,9 +1,6 @@
 // Import statements comes here.
 import React  from 'react';
 import { Col, Form, FormGroup, Label, Input } from 'reactstrap';
-//import { response } from 'express';
-//import { response } from 'express';
-//import { response } from 'express';
 
 // You need to extend the functionality of `Component` to the class created.
 class Action extends React.Component {
@@ -20,84 +17,70 @@ class Action extends React.Component {
     }
 
     componentDidMount() {
-        console.log("component mount");
         this.getCurrencyList();
         this.setDefaultValues();
     }
 
     getCurrencyList = _ => {
-        fetch('http://localhost:4000/currencies')
+        fetch(`http://localhost:4000/currencies`)
         .then(response => response.json())
         .then(response => { this.setState({currencyList: response.data}) })
-        //.then( ({data}) => { console.log("data: " + data[0].CurrencyId) })
         .catch(err => console.error(err))
     }
 
     setDefaultValues = _ => {
-        fetch('http://localhost:4000/currencies/get?CurrencyCode=EUR')
+        fetch(`http://localhost:4000/currencies/get?CurrencyCode=EUR`)
         .then(response => response.json())
         .then(response => { this.setState({currencyFrom: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) })
         .catch(err => console.error(err));
 
-        fetch('http://localhost:4000/currencies/get?CurrencyCode=USD')
+        fetch(`http://localhost:4000/currencies/get?CurrencyCode=USD`)
         .then(response => response.json())
         .then(response => { this.setState({currencyTo: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) })
         .catch(err => console.error(err));
     }
 
     handleCurrencyFromChange(currCode) {
-        console.log("handleCurrencyFromChange: passed in curr : " + currCode);
-
-        fetch('http://localhost:4000/currencies/get?CurrencyCode=' + currCode)
+        fetch(`http://localhost:4000/currencies/get?CurrencyCode=${currCode}`)
         .then(response => response.json())
         .then(response => { 
                 this.setState({currencyFrom: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) 
                 this.convertAmount(this.state.amount, response.data[0].CurrencyId, this.state.currencyTo.CurrencyId)
-            })
-        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })     
+            })    
         .catch(err => console.error(err));
     }
 
     handleCurrencyToChange(currCode) {
-        console.log("handleCurrencyToChange: passed in curr : " + currCode);
-
-        fetch('http://localhost:4000/currencies/get?CurrencyCode=' + currCode)
+        fetch(`http://localhost:4000/currencies/get?CurrencyCode=${currCode}`)
         .then(response => response.json())
         .then(response => { 
                 this.setState({currencyTo: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) 
                 this.convertAmount(this.state.amount, this.state.currencyFrom.CurrencyId, response.data[0].CurrencyId)
-            })
-        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })     
+            })  
         .catch(err => console.error(err));
     }
 
     handleAmountChange(e){
-        console.log("amount passed: " + e);
-        console.log("curr from: " + this.state.currencyFrom.CurrencyCode);
-        console.log("curr to: " + this.state.currencyTo.CurrencyCode);
-
         let newAmount = this.state.amount;
         newAmount = e;
         this.setState({amount: newAmount});
-
         this.convertAmount(e, this.state.currencyFrom.CurrencyId, this.state.currencyTo.CurrencyId);        
     }
 
     convertAmount(amnt, from, to) {
-
-        fetch('http://localhost:4000/exchangeRates/get?CurrencyFrom=' 
-            + from 
-            + '&CurrencyTo='
-            + to )
+        fetch(`http://localhost:4000/exchangeRates/get?CurrencyFrom=${from}&CurrencyTo=${to}`)
         .then(response => response.json())
-        .then(response => { this.setState( {convertedAmount: amnt * response.data[0].ExchangeRate}) } )
+        .then(response => { 
+                this.setState( {convertedAmount: amnt * response.data[0].ExchangeRate});
+                this.logUsage(amnt, amnt * response.data[0].ExchangeRate, from, to, response.data[0].ExchangeRate);
+            } )
         .catch(err => console.error(err));
-
-        this.logUsage(amnt, from, to);
     }
 
-    logUsage(amount, currencyFrom, currencyTo) {
-        console.log('logged!');
+    logUsage(amount, amountConverted, currencyFrom, currencyTo, exchangeRate) {
+        fetch(`http://localhost:4000/logs/log?AmountToConvert=${amount}&AmountConverted=${amountConverted}&CurrencyIdFrom=${currencyFrom}&CurrencyIdTo=${currencyTo}&ExchangeRate=${exchangeRate}`)
+        .then(response => response.json())
+        .catch(err => console.error(err));
     }
 
     // This function renders a component

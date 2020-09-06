@@ -17,12 +17,11 @@ callback = function(response) {
   //the whole response has been received, so we just print it out here
   response.on('end', function () {
     loadDataToDatabase(str)
-    //console.log(str);
+    console.log("Loaded!");
   });
 }
 
 function loadDataToDatabase(xmlString) {
-
   var res;
   var parseString = require('xml2js').parseString;
   parseString(xmlString, function (err, result) {  
@@ -32,9 +31,6 @@ function loadDataToDatabase(xmlString) {
   var i;
   var currencyArr = [];
   for(i=0; i < res.length; i++) {
-    console.log("CurrencyCode: " + res[i].CcyAmt[1].Ccy);
-    console.log("ExchangeRate: " + res[i].CcyAmt[1].Amt);
-    console.log("FixedDate: " + res[i].Dt);
     currencyArr.push([res[i].CcyAmt[1].Ccy, res[i].CcyAmt[1].Amt, res[i].Dt]);
   }
 
@@ -49,17 +45,20 @@ function loadDataToDatabase(xmlString) {
 
   con.connect(function(err) {
     if (err) throw err;
-    console.log("Connected!");
-    var sql = "INSERT INTO CurrencyExchange.ExchangeRatesLoader (CurrencyCode, ExchangeRate, CurrencyFixedDate) VALUES ?";
-    
-    con.query(sql, [currencyArr], function (err, result){
+
+    var TRUNCATE_QUERY = "call CurrencyExchange.TruncateData;";
+    con.query(TRUNCATE_QUERY, function (err, result){
       if (err) throw err;
-      //console.log(result);
     })
 
-    con.query("call CurrencyExchange.LoadExchangeRates;", function (err, result){
+    var INSERT_QUERY = "INSERT INTO CurrencyExchange.ExchangeRatesLoader (CurrencyCode, ExchangeRate, CurrencyFixedDate) VALUES ?";
+    con.query(INSERT_QUERY, [currencyArr], function (err, result){
       if (err) throw err;
-      //console.log(result);
+    });
+
+    var UPDATE_QUERY = "call CurrencyExchange.LoadExchangeRates;";
+    con.query(UPDATE_QUERY, function (err, result){
+      if (err) throw err;
     });
 });
 
