@@ -1,0 +1,5 @@
+* MySQL folder - scripts for CurrencyExchange database tables and procedures
+* nodejs folder - js scripts:
+*** exchanger-server - script to create API for database tables
+*** load-exchange-rates-data - scrips to load Currency list and Exchange rates data from www.lb.lt rest into database
+* React folder - react project for UI
