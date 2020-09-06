@@ -1,7 +1,7 @@
 
 import React from 'react';
 import './App.css';
-import Action from './components/buttons'
+import Action from './components/actions'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
