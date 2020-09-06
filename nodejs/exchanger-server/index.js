@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
-
 const app = express();
 
 const SELECT_CURRENCY_QUERY = 'SELECT CurrencyId, CurrencyCode FROM CurrencyExchange.Currency WHERE IsActive = 1';
@@ -14,6 +13,7 @@ const connection = mysql.createConnection({
     password: 'ExchangerUserPassword101',
     database: 'CurrencyExchange'
 });
+
 
 connection.connect(err => {
     if(err){
