@@ -8,8 +8,10 @@ Folder contains MySQL database tables and procedures creation scripts.
 Folder contains react app files.
 ## To run
 1. Create database named CurrencyExchange and run scripts from MySQL folder
+* Create user CurrencyExchangeUser with password CurrencyExchangeUserPassword101
+* Or, use your own user but change connection strings in LoadCurrency.js, LoadExchangeRates.js and index.js
 2. Load exchange rates data:
 * Load currency list __nodejs/load-exchange-rates-data/LoadCurrency.js__ (node LoadCurrency.js)
 * Load exchange rates __nodejs/load-exchange-rates-data/LoadExchangeRates.js__ (node LoadExchangeRates.js)
-3. Create API by running __nodejs/exchanger-server__/index.js (node index.js)
+3. Create API by running __nodejs/exchanger-server/index.js__ (node index.js)
 4. Run react app __react/exchanger__ (npm start)
