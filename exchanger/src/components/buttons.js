@@ -3,6 +3,7 @@ import React  from 'react';
 import { Col, Form, FormGroup, Label, Input } from 'reactstrap';
 //import { response } from 'express';
 //import { response } from 'express';
+//import { response } from 'express';
 
 // You need to extend the functionality of `Component` to the class created.
 class Action extends React.Component {
@@ -21,7 +22,7 @@ class Action extends React.Component {
     componentDidMount() {
         console.log("component mount");
         this.getCurrencyList();
-        this.setDefaultCurrencies();
+        this.setDefaultValues();
     }
 
     getCurrencyList = _ => {
@@ -32,11 +33,10 @@ class Action extends React.Component {
         .catch(err => console.error(err))
     }
 
-    setDefaultCurrencies = _ => {
+    setDefaultValues = _ => {
         fetch('http://localhost:4000/currencies/get?CurrencyCode=EUR')
         .then(response => response.json())
         .then(response => { this.setState({currencyFrom: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) })
-        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })
         .catch(err => console.error(err));
 
         fetch('http://localhost:4000/currencies/get?CurrencyCode=USD')
@@ -45,28 +45,30 @@ class Action extends React.Component {
         .catch(err => console.error(err));
     }
 
-    handleCurrencyFromChange(e) {
-        console.log("handleCurrencyFromChange: passed in curr : " + e);
+    handleCurrencyFromChange(currCode) {
+        console.log("handleCurrencyFromChange: passed in curr : " + currCode);
 
-        fetch('http://localhost:4000/currencies/get?CurrencyCode=' + e)
+        fetch('http://localhost:4000/currencies/get?CurrencyCode=' + currCode)
         .then(response => response.json())
-        .then(response => { this.setState({currencyFrom: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) })
-        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })
+        .then(response => { 
+                this.setState({currencyFrom: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) 
+                this.convertAmount(this.state.amount, response.data[0].CurrencyId, this.state.currencyTo.CurrencyId)
+            })
+        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })     
         .catch(err => console.error(err));
-
-        this.convertAmount();
     }
 
-    handleCurrencyToChange(e) {
-        console.log("handleCurrencyToChange: passed in curr : " + e);
+    handleCurrencyToChange(currCode) {
+        console.log("handleCurrencyToChange: passed in curr : " + currCode);
 
-        fetch('http://localhost:4000/currencies/get?CurrencyCode=' + e)
+        fetch('http://localhost:4000/currencies/get?CurrencyCode=' + currCode)
         .then(response => response.json())
-        .then(response => { this.setState({currencyTo: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) })
-        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })
+        .then(response => { 
+                this.setState({currencyTo: {CurrencyId: response.data[0].CurrencyId, CurrencyCode: response.data[0].CurrencyCode} }) 
+                this.convertAmount(this.state.amount, this.state.currencyFrom.CurrencyId, response.data[0].CurrencyId)
+            })
+        //.then( ({data}) => { console.log("data: " + data[0].CurrencyCode) })     
         .catch(err => console.error(err));
-
-        this.convertAmount();
     }
 
     handleAmountChange(e){
@@ -78,22 +80,24 @@ class Action extends React.Component {
         newAmount = e;
         this.setState({amount: newAmount});
 
-        this.convertAmount();        
+        this.convertAmount(e, this.state.currencyFrom.CurrencyId, this.state.currencyTo.CurrencyId);        
     }
 
-    convertAmount() {
-        console.log("convertAmount: currFrom: " + this.state.currencyFrom.CurrencyCode);
-        console.log("convertAmount: currTo: " + this.state.currencyTo.CurrencyCode);
-        console.log("convertAmount: amount: " + this.state.amount);
-        console.log("convertAmount: convertedAmount: " + this.state.convertedAmount);
+    convertAmount(amnt, from, to) {
 
         fetch('http://localhost:4000/exchangeRates/get?CurrencyFrom=' 
-            + this.state.currencyFrom.CurrencyId 
+            + from 
             + '&CurrencyTo='
-            + this.state.currencyTo.CurrencyId )
+            + to )
         .then(response => response.json())
-        .then(response => { this.setState( {convertedAmount: this.state.amount * response.data[0].ExchangeRate}) } )
+        .then(response => { this.setState( {convertedAmount: amnt * response.data[0].ExchangeRate}) } )
         .catch(err => console.error(err));
+
+        this.logUsage(amnt, from, to);
+    }
+
+    logUsage(amount, currencyFrom, currencyTo) {
+        console.log('logged!');
     }
 
     // This function renders a component
@@ -120,7 +124,7 @@ class Action extends React.Component {
                     <Label for="currencyTo" sm={2}>Currency to</Label>
                     <Col sm={100}>
                         <Input type="select" name="select" id="exampleSelect" value={this.state.currencyTo.CurrencyCode}
-                            onChange={(event) => this.handleCurrencyToChange(event.target.value)}>
+                            onChange={(event) => this.handleCurrencyToChange(event.target.value, event.target.key)}>
                             {this.state.currencyList.map(currency => (
                                 <option key={currency.CurrencyId}> {currency.CurrencyCode} </option>
                             ))} 
